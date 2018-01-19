@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<project name="Ant-Test" default="generateReport" basedir=".">
+    <!-- Sets variables which can later be used. -->
+    <!-- The value of a property is accessed via ${} -->
+    <property name="src.dir" location="src" />
+    <property name="lib.dir" location="lib" />
+    <property name="build.dir" location="bin" />
+
+    <!--Create a classpath container which can be later used in the ant task-->
+	  	<taskdef name="testng" classname="org.testng.TestNGAntTask" >
+					<classpath>
+					<pathelement location="lib/testng-6.0.jar" />
+					</classpath>				
+		</taskdef>
+	<path id="master-classpath">
+        <pathelement location="${build.dir}" />
+        <fileset dir="${lib.dir}" includes="*.jar"/>
+    </path>
+     
+			 
+    <path id="classpath">
+        <fileset dir="${lib.dir}">
+            <include name="**/*.jar" />
+        </fileset>
+    </path>
+			 
+    <!-- Deletes the existing build directory-->
+    <target name="clean">
+        <delete dir="${build.dir}" />
+    </target>
+
+    <!-- Creates the  build  directory-->
+    <target name="makedir">
+        <mkdir dir="${build.dir}" />
+    </target>
+
+    <!-- Compiles the java code -->
+    <target name="compile" depends="clean, makedir">
+        <javac srcdir="${src.dir}" destdir="${build.dir}" classpathref="classpath" />
+    </target>
+	
+	<target name="TestNG" depends="compile">
+			<!-- testng tag will be used to execute testng code using corresponding testng.xml file -->
+				<testng classpath="${build.dir}" classpathref="classpath" suitename= "Suite">
+	               <xmlfileset dir="${src.dir}" includes="start.xml"/>
+				</testng>
+	</target>
+	
+	<target name="generateReport" depends="TestNG">
+        <delete dir="${basedir}/testng-xslt">
+        </delete>
+        <mkdir dir="${basedir}/testng-xslt">
+        </mkdir>
+        <xslt in="${basedir}/test-output/testng-results.xml" style="${basedir}/testng-results.xsl" out="${basedir}/testng-xslt/index.html">
+            <param expression="${basedir}/testng-xslt/" name="testNgXslt.outputDir" />
+            <param expression="true" name="testNgXslt.sortTestCaseLinks" />
+            <param expression="FAIL,SKIP,PASS,CONF,BY_CLASS" name="testNgXslt.testDetailsFilter" />
+            <param expression="true" name="testNgXslt.showRuntimeTotals" />
+             <classpath refid="master-classpath"></classpath>
+        </xslt>
+    </target>
+</project>
+		
